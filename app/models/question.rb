@@ -26,10 +26,28 @@ class Question < ActiveRecord::Base
     end
   end
 
-  def dank_results
-    results = question.find_by_sql(<<-SQL, )
-    
-
+  def best_results
+    results = ActiveRecord::Base.connection.execute(<<-SQL)
+      SELECT
+        answer_choices.body, COUNT(responses.id)
+      FROM
+        answer_choices
+      LEFT OUTER JOIN
+        responses
+      ON
+        responses.answer_choice_id = answer_choices.id
+      WHERE
+        answer_choices.question_id = #{self.id}
+      GROUP BY
+        answer_choices.id
     SQL
+    results.values
+  end
+
+  def most_best_results
+    answer_choices
+    .select("answer_choices.*, COUNT(responses.id) AS responses_count")
+    .joins("LEFT OUTER JOIN responses ON responses.answer_choice_id = answer_choices.id")
+    .group("answer_choices.id")
   end
 end
