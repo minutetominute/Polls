@@ -45,9 +45,13 @@ class Question < ActiveRecord::Base
   end
 
   def most_best_results
-    answer_choices
+    results = answer_choices
     .select("answer_choices.*, COUNT(responses.id) AS responses_count")
     .joins("LEFT OUTER JOIN responses ON responses.answer_choice_id = answer_choices.id")
     .group("answer_choices.id")
+
+    results.each_with_object({}) do |choice, result|
+      result[choice.body] = choice.responses_count
+    end
   end
 end
